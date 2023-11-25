@@ -1,0 +1,36 @@
+=== Proponowane kryteria oceniania czwartego zadania ===
+
+== Cele dydaktyczne ==
+
+Studenci powinni:
+- poznać szablony oraz ich specjalizację i częściową specjalizację;
+- poznać techniki manipulowania typami i danymi na etapie kompilowania programu;
+- poznać constexpr i dowiedzieć się, że w kolejnych standardach coraz więcej
+  elementów z biblioteki standardowej ma takie oznaczenie, np. std::max od C++14;
+- poznać techniki radzenia sobie z szablonami o zmiennej liczbie argumentów;
+- poznać elementy biblioteki standardowej pomagające w powyższym, np. type_traits;
+- poznać ideę perfect forwarding (użycie &&, std::forward, decltype(auto));
+- poznać niektóre typy i funkcje biblioteki standardowej służące do
+  metaprogramowania: std::conditional, std::is_same, std::integer_sequence,
+  std::integral_constant.
+
+== Ocena automatyczna ==
+
+Za testy automatyczne można otrzymać maksymalnie 6 punktów. Nie ma punktów
+ułamkowych ani ujemnych.
+
+== Ocena jakości tekstu źródłowego ==
+
+Zaczynamy od 4 punktów i odejmujemy po jednym punkcie za (przy czym ocena nie
+może być ujemna):
+- niezgodność zawartości repozytorium ze specyfikacją zadania;
+- ostrzeżenia wypisywane przez kompilator;
+- nieelegancki styl, złe formatowanie kodu;
+- kod, którego sprawdzający nie jest w stanie zrozumieć;
+- obliczenia w trakcie wykonywania programu;
+- anonimową przestrzeń nazw w pliku nagłówkowym, zaśmiecanie przestrzeni nazw,
+  np. przez użycie „using namespace std” w pliku nagłówkowym;
+- wszystkie błędy, które nie powinny się już pojawiać po poprzednich zajęciach,
+  np. brak header guard, inicjowanie obiektów inaczej niż przez listę
+  inicjującą, przekazywanie dużych obiektów przez wartość itp., o ile nie
+  zostały wykryte przez testy automatyczne.

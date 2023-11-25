@@ -1,0 +1,81 @@
+Foo(): id = 0
+empty
+nothing
+single with lambda
+1 2 3 
+single with function pointer
+4 5 6 
+Foo::Print() id = 0
+size_t
+1 10 7 
+1 10 8 
+2 10 7 
+2 10 8 
+3 10 7 
+3 10 8 
+std::integral_constant, size_t
+1 11 7 
+1 11 8 
+2 11 7 
+2 11 8 
+3 11 7 
+3 11 8 
+string
+ala 10 7 
+ala 10 8 
+template Print single
+137 
+138 
+237 
+238 
+template Print all
+1 3 7 
+1 3 8 
+2 3 7 
+2 3 8 
+single result
+987
+integer sequence single result
+654
+integer sequence empty result
+integer sequence multiple result
+124
+125
+134
+135
+tuple result
+ala ma 5 kotów 
+ala ma 7 kotów 
+ala ma 9 kotów 
+Foo: const auto&
+Foo(): id = 1
+[Foo: 1] [Foo: 0] 
+Foo: auto
+Foo(): id = 2
+Foo(Foo&&) id = 2
+Foo(const Foo&) id = 0 -> id = 3
+[Foo: 2] [Foo: 3] 
+Foo: auto&
+[Foo: 0] [Foo: 0] 
+Foo: const auto& integer_sequence
+Foo(): id = 4
+0 [Foo: 4] [Foo: 0] 
+1 [Foo: 4] [Foo: 0] 
+Foo: auto integer_sequence
+Foo(): id = 5
+Foo(Foo&&) id = 5
+Foo(const Foo&) id = 0 -> id = 6
+0 [Foo: 5] [Foo: 6] 
+Foo(Foo&&) id = 5
+Foo(const Foo&) id = 0 -> id = 7
+1 [Foo: 5] [Foo: 7] 
+reference passing with integer_sequence
+10
+15
+reference result single
+3215
+Caller
+Foo(): id = 8
+3 caller 
+2 caller 
+1 caller 

@@ -1,0 +1,64 @@
+Celem zadania jest zaimplementowanie pewnego uogólnienia std::invoke,
+aby w specjalny sposób obsługiwało argumenty typu std::integer_sequence.
+
+W pliku nagłówkowym invoke_intseq.h należy zaimplementować szablon funkcji:
+
+template <class F, class... Args>
+template result_type invoke_intseq(F&& f, Args&&... args);
+
+1. W przypadku gdy żaden z argumentów nie jest typu std::integer_sequence,
+wywołanie invoke_intseq(f, args...) powinno dać ten sam efekt co wywołanie
+std::invoke(f, args...), co odpowiada wywołaniu f(args...).
+
+2. Gdy na liście argumentów jest jeden bądź więcej argumentów typu
+std::integer_sequence, należy wywołać funkcję f dla wszystkich możliwych
+kombinacji elementów zakodowanych w std::integer_sequence. Dokładniej, niech
+args... będzie ciągiem argumentów a_1, a_2, ..., a_n i niech a_i będzie
+pierwszym argumentem typu std::integer_sequence<T, j_1, j_2, ..., j_m>. Wtedy
+invoke_intseq(f, a_1, ..., a_n) definiujemy jako ciąg wywołań rekurencyjnych:
+
+invoke_intseq(f, a_1, ..., a_{i - 1}, std::integral_constant<T, j_1>, a_{i + 1}, ..., a_n),
+invoke_intseq(f, a_1, ..., a_{i - 1}, std::integral_constant<T, j_2>, a_{i + 1}, ..., a_n),
+...
+invoke_intseq(f, a_1, ..., a_{i - 1}, std::integral_constant<T, j_m>, a_{i + 1}, ..., a_n).
+
+Typem wyniku całego głównego wywołania invoke_intseq jest
+(a) void, jeżeli typem wyniku f jest void, czyli f niczego nie zwraca;
+(b) typ spełniający koncept std::ranges::range, czyli typ, po którym możemy
+    iterować po elementach typu takiego jaki zwraca f, a w wyniku iterowania po
+    wynikowym obiekcie dostajemy wszystkie wyniki powstałe w wyniku aplikowania
+    f w zadanej przez definicję kolejności.
+
+Dodatkowe wymagania
+
+* Wymagamy „perfect forwarding”: nie powinna być wykonywana kopia argumentu
+  (zarówna f, jak i args...), jeśli jest on przekazywany przez referencję, czyli
+  jest lvalue, a jeśli jest to rvalue, to powinien być przekazywany na własność.
+  Kopia może zostać wykonana tylko wtedy, gdy argument jest przekazywany przez
+  wartość.
+* Wymagamy „constexpr”: funkcja invoke_intseq powinna być wyliczalna w czasie
+  kompilowania, jeśli wszystkie argumenty (f i args...) są wyliczalne podczas
+  kompilowania.
+
+Wymagania formalne
+
+Rozwiązanie będzie kompilowane na maszynie students za pomocą polecenia
+
+clang++ -Wall -Wextra -std=c++20 -O2 *.cc
+
+Przykład użycia znajduje się w pliku invoke_intseq_exmpl.cc. Wynik jego
+działania znajduje się w pliku invoke_intseq_exmpl.out.
+
+Rozwiązanie powinno zawierać plik invoke_intseq.h. Plik ten należy umieścić
+w repozytorium w katalogu
+
+grupaN/zadanie4/ab123456+cd123456
+
+lub
+
+grupaN/zadanie4/ab123456+cd123456+ef123456
+
+gdzie N jest numerem grupy, a ab123456, cd123456, ef123456 są identyfikatorami
+członków zespołu umieszczającego to rozwiązanie. Katalog z rozwiązaniem nie
+powinien zawierać innych plików. Nie wolno umieszczać w repozytorium plików
+dużych, binarnych, wykonywalnych, tymczasowych (np. *.o) ani innych zbędnych.
