@@ -14,7 +14,7 @@ curry(F&& f) {
   if constexpr (needs_unapply<decltype(f)>::value) {
        return [=](auto&& x) {
             return curry(
-                [=](auto&&...xs) -> decltype(f(x,xs...)) {
+                [&](auto&&...xs) -> decltype(f(x,xs...)) {
                     return f(x,xs...);
                 }
             );
@@ -26,12 +26,18 @@ curry(F&& f) {
   }
 }
 
-int 
-main()
+constexpr int g (const int a, const int b, const int c, const int d) {
+  return a * b * c * d;
+}
+constexpr int g (const int a, const int b, const int c, const int d, const int e) {
+  return a * b * c * d * e;
+}
+
+int main()
 {
   auto f = [](auto a, auto b, auto c, auto d) {
     return a  * b * c * d;
   };
   
-  return curry(f)(1)(2)(3)(4);
+  return curry(g)(1)(2)(3)(4);
 }
