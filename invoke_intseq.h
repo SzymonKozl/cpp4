@@ -14,9 +14,9 @@ concept has_intseq = (true || ... || is_intseq<Args>);
 template<class F>
 concept return_void = (std::same_as<std::invoke_result<F>, void>);
 
-template<class F, class T>
-constexpr auto curry (F f, T arg1) {
-    return [&](auto... args) -> decltype(f(arg1, args...)) {
+template<class F, class T, class... Args>
+constexpr std::function<std::invoke_result_t<F>(T, Args...)> curry (F f, T arg1) {
+    return [&](Args... args) -> std::invoke_result_t<F> {
         return f(arg1, args...);
     };
 }
@@ -26,7 +26,7 @@ constexpr void inner (F f, T arg1, Args... args){
         std::invoke(f, arg1);
     }
     else {
-        inner(curry(f, arg1), args...);
+        inner(curry<F, T, Args...>(f, arg1), args...);
     }
 }
 template<class F, class T, class... Args, T... ints>
@@ -35,7 +35,7 @@ constexpr void inner (F f, std::integer_sequence<T, ints...>, Args... args) {
         (std::invoke(f, ints), ...);
     }
     else {
-        (inner(curry(f, ints), args...), ...);
+        (inner(curry<F, T, Args...>(f, ints), args...), ...);
     }
 }
 
@@ -45,7 +45,7 @@ constexpr void inner2 (std::vector<std::invoke_result<F>> &res, F f, T arg1, Arg
         res.push_back(std::invoke(f, arg1));
     }
     else {
-        inner2(res, curry(f, arg1), args...);
+        inner2(res, curry<F, T, Args...>(f, arg1), args...);
     }
 }
 template<class F, class T, class... Args, T... ints>
@@ -54,7 +54,7 @@ constexpr void inner2 (std::vector<std::invoke_result<F>> &res, F f, std::intege
         (res.push_back(std::invoke(f, ints)), ...);
     }
     else {
-        (inner2(res, curry(f, ints), args...), ...);
+        (inner2(res, curry<F, T, Args...>(f, ints), args...), ...);
     }
 }
 template<class F>
