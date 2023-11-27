@@ -63,8 +63,8 @@ constexpr void inner2 (std::vector<std::invoke_result<F>> &res, F f) {
 }
 
 template<class F, class... Args>
-constexpr std::invoke_result_t<F> invoke_intseq(F f, Args... args) {
-    return std::invoke(f, args...);
+constexpr decltype(auto) invoke_intseq(F&& f, Args&&... args) {
+    return std::invoke(std::forward<F>(f), std::forward<Args>(args)...);
 }
 
 
