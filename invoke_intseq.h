@@ -5,7 +5,7 @@
 
 template<class T>
 concept is_intseq = requires (T a) {
-    ([] <class U> (std::integer_sequence<U>){})(a);
+    ([] <class U, U... ints> (std::integer_sequence<U, ints...>){})(a);
 };
 
 template<class... Args>
@@ -15,51 +15,34 @@ template<class F>
 concept return_void = (std::same_as<std::invoke_result_t<F>, void>);
 
 template<class F, class T, class... Args>
-constexpr std::function<std::invoke_result_t<F>(T, Args...)> curry (F f, T arg1) {
-    return [&](Args... args) -> std::invoke_result_t<F> {
-        return f(arg1, args...);
-    };
-}
-template<class F, class T, class... Args>
-constexpr void inner (F f, T arg1, Args... args){
+constexpr void inner (F&& f, T&& arg1, Args&&... args){
     if constexpr (sizeof...(args) == 0){
-        std::invoke(f, arg1);
+        std::invoke(std::forward<F>(f), std::forward<T>(arg1));
     }
     else {
-        inner(curry<F, T, Args...>(f, arg1), args...);
+        auto newf = std::bind_front(f, std::forward<T>(arg1));
+        inner(std::forward<decltype(newf)>(newf), std::forward<Args>(args)...);
     }
 }
 template<class F, class T, class... Args, T... ints>
-constexpr void inner (F f, std::integer_sequence<T, ints...>, Args... args) {
-    if constexpr (sizeof...(args) == 0) {
-        (std::invoke(f, ints), ...);
-    }
-    else {
-        (inner(curry<F, T, Args...>(f, ints), args...), ...);
-    }
+constexpr void inner(F&& f, std::integer_sequence<T, ints...>&&, Args&&... args) {
+    (inner(std::forward<F>(f), std::forward<std::integral_constant<T, std::forward<T>(ints)>>(
+        std::integral_constant<T, std::forward<T>(ints)>()), std::forward<Args>(args)...), ...);
 }
 
+// TODO - inner 2 nie jest do końca dopracowany, bo ma większy problem - w ogóle nie działa
 template<class F, class T, class... Args>
-constexpr void inner2 (std::vector<std::invoke_result_t<F>> &res, F f, T arg1, Args... args){
+constexpr void inner2(std::vector<std::invoke_result_t<F>> &res, F&& f, T&& arg1, Args&&... args) {
     if constexpr (sizeof...(args) == 0){
         res.push_back(std::invoke(f, arg1));
     }
     else {
-        inner2(res, curry<F, T, Args...>(f, arg1), args...);
+        inner2(res, std::bind_front(f, arg1), args...);
     }
 }
 template<class F, class T, class... Args, T... ints>
-constexpr void inner2 (std::vector<std::invoke_result_t<F>> &res, F f, std::integer_sequence<T, ints...>, Args... args) {
-    if constexpr (sizeof...(args) == 0) {
-        (res.push_back(std::invoke(f, ints)), ...);
-    }
-    else {
-        (inner2(res, curry<F, T, Args...>(f, ints), args...), ...);
-    }
-}
-template<class F>
-constexpr void inner2 (std::vector<std::invoke_result<F>> &res, F f) {
-    res.push_back(std::invoke(f));
+constexpr void inner2(std::vector<std::invoke_result_t<F>> &res, F&& f, std::integer_sequence<T, ints...>&&, Args&&... args) {
+    (inner2(res, std::forward<F>(f), std::integral_constant<T, ints>(), std::forward<Args>(args)...), ...);
 }
 
 template<class F, class... Args>
@@ -67,34 +50,17 @@ constexpr decltype(auto) invoke_intseq(F&& f, Args&&... args) {
     return std::invoke(std::forward<F>(f), std::forward<Args>(args)...);
 }
 
-
 template<class F, class... Args> requires has_intseq<Args...> && std::same_as<std::invoke_result_t<F>, void>
-constexpr void invoke_intseq(F f, Args... args) {
-    inner (f, args...);
+// FIXME - same_as should, I believe, include Args as parameters, but trivially
+// adding them will not solve the problem - we need to unwrap intseqs first
+constexpr void invoke_intseq(F&& f, Args&&... args) {
+    inner(std::forward<F>(f), std::forward<Args>(args)...);
 }
-
-template<class T>
-constexpr size_t arg_size(T) {
-    return 1;
-}
-template<class T, T... ints>
-constexpr size_t arg_size(std::integer_sequence<T, ints...>) {
-    return sizeof...(ints);
-}
-
-template<class... Args>
-constexpr size_t result_size(Args... args) {
-    return (1 * ... * arg_size(args));
-}
-
 
 template<class F, class... Args> requires has_intseq<Args...>
-constexpr std::vector<std::invoke_result_t<F>> invoke_intseq(F f, Args... args) {
-    std::vector<std::invoke_result_t<F>> ans;
-    if (sizeof...(args))
-        inner2 (ans, f, args...);
-    else
-        inner2(ans, f);
+constexpr std::vector<std::invoke_result_t<F>> invoke_intseq(F&& f, Args&&... args) { // FIXME
+    std::vector<std::invoke_result_t<F>> ans; // FIXME - should include Args (insert same comment as above)
+    inner2(std::forward<decltype(ans)>(ans), std::forward<f>, std::forward<Args>(args)...);
     return ans;
 }
 
