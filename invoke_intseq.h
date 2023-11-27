@@ -9,10 +9,10 @@ concept is_intseq = requires (T a) {
 };
 
 template<class... Args>
-concept has_intseq = (true || ... || is_intseq<Args>);
+concept has_intseq = (false || ... || is_intseq<Args>);
 
 template<class F>
-concept return_void = (std::same_as<std::invoke_result<F>, void>);
+concept return_void = (std::same_as<std::invoke_result_t<F>, void>);
 
 template<class F, class T, class... Args>
 constexpr std::function<std::invoke_result_t<F>(T, Args...)> curry (F f, T arg1) {
@@ -40,7 +40,7 @@ constexpr void inner (F f, std::integer_sequence<T, ints...>, Args... args) {
 }
 
 template<class F, class T, class... Args>
-constexpr void inner2 (std::vector<std::invoke_result<F>> &res, F f, T arg1, Args... args){
+constexpr void inner2 (std::vector<std::invoke_result_t<F>> &res, F f, T arg1, Args... args){
     if constexpr (sizeof...(args) == 0){
         res.push_back(std::invoke(f, arg1));
     }
@@ -49,7 +49,7 @@ constexpr void inner2 (std::vector<std::invoke_result<F>> &res, F f, T arg1, Arg
     }
 }
 template<class F, class T, class... Args, T... ints>
-constexpr void inner2 (std::vector<std::invoke_result<F>> &res, F f, std::integer_sequence<T, ints...>, Args... args) {
+constexpr void inner2 (std::vector<std::invoke_result_t<F>> &res, F f, std::integer_sequence<T, ints...>, Args... args) {
     if constexpr (sizeof...(args) == 0) {
         (res.push_back(std::invoke(f, ints)), ...);
     }
@@ -63,12 +63,12 @@ constexpr void inner2 (std::vector<std::invoke_result<F>> &res, F f) {
 }
 
 template<class F, class... Args>
-constexpr std::invoke_result<F> invoke_intseq(F f, Args... args) {
+constexpr std::invoke_result_t<F> invoke_intseq(F f, Args... args) {
     return std::invoke(f, args...);
 }
 
 
-template<class F, class... Args> requires has_intseq<Args...> && std::same_as<std::invoke_result<F>, void>
+template<class F, class... Args> requires has_intseq<Args...> && std::same_as<std::invoke_result_t<F>, void>
 constexpr void invoke_intseq(F f, Args... args) {
     inner (f, args...);
 }
@@ -89,8 +89,8 @@ constexpr size_t result_size(Args... args) {
 
 
 template<class F, class... Args> requires has_intseq<Args...>
-constexpr std::vector<std::invoke_result<F>> invoke_intseq(F f, Args... args) {
-    std::vector<std::invoke_result<F>> ans;
+constexpr std::vector<std::invoke_result_t<F>> invoke_intseq(F f, Args... args) {
+    std::vector<std::invoke_result_t<F>> ans;
     if (sizeof...(args))
         inner2 (ans, f, args...);
     else
