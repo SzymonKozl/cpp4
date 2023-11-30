@@ -58,7 +58,9 @@ constexpr void inner (F&& f, T&& arg1, Args&&... args){
         std::invoke(std::forward<F>(f), std::forward<T>(arg1));
     }
     else {
-        auto newf = std::bind_front(f, std::forward<T>(arg1));
+        decltype(auto) newf = [&f, &arg1]<class... U>(U&&... u) {
+            std::invoke(std::forward<F>(f), std::forward<T>(arg1), std::forward<U>(u)...);
+        };
         inner(std::forward<decltype(newf)>(newf), std::forward<Args>(args)...);
     }
 }
@@ -88,15 +90,15 @@ constexpr decltype(auto) invoke_intseq(F&& f, Args&&... args) {
     return std::invoke(std::forward<F>(f), std::forward<Args>(args)...);
 }
 
-template<class F2, class... Args2> requires has_intseq<Args2...> && std::same_as<std::invoke_result_t<F2, TRUE_ARGS(Args2)>, void>
-constexpr void invoke_intseq(F2&& f2, Args2&&... args2) {
-    inner(std::forward<F2>(f2), std::forward<Args2>(args2)...);
+template<class F, class... Args> requires has_intseq<Args...> && std::same_as<std::invoke_result_t<F, TRUE_ARGS(Args)>, void>
+constexpr void invoke_intseq(F&& f, Args&&... args) {
+    inner(std::forward<F>(f), std::forward<Args>(args)...);
 }
 
-template<class F3, class... Args3> requires has_intseq<Args3...>
-constexpr std::vector<std::invoke_result_t<F3, TRUE_ARGS(Args3)>> invoke_intseq(F3&& f3, Args3&&... args3) { // FIXME
-    std::vector<std::invoke_result_t<F3, TRUE_ARGS(Args3)>> ans(args_size(args3...));
-    inner2(std::forward<decltype(ans)>(ans), std::forward<F3>(f3), std::forward<Args3>(args3)...);
+template<class F, class... Args> requires has_intseq<Args...>
+constexpr std::vector<std::invoke_result_t<F, TRUE_ARGS(Args)>> invoke_intseq(F&& f, Args&&... args) {
+    std::vector<std::invoke_result_t<F, TRUE_ARGS(Args)>> ans;
+    inner2(std::forward<decltype(ans)>(ans), std::forward<f>, std::forward<Args>(args)...);
     return ans;
 }
 
