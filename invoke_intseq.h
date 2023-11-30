@@ -11,6 +11,9 @@ concept is_intseq = requires (T a) {
 template<class... Ts>
 concept has_intseq = (false || ... || is_intseq<Ts>);
 
+template<class... Ts>
+concept has_not_intseq = !has_intseq<Ts...>;
+
 template<class T>
 struct extract_type {
     using type = T;
@@ -72,30 +75,28 @@ constexpr void inner2(std::vector<std::invoke_result_t<F, T, TRUE_ARGS(Args)>> &
         res.push_back(std::invoke(f, arg1));
     }
     else {
-        inner2(res, std::bind_front(f, arg1), args...);
+        inner2(std::forward<decltype(res)>(res), std::bind_front(f, arg1), args...);
     }
 }
-template<class F, class T, class... Args, T... ints>
-constexpr void inner2(std::vector<std::invoke_result_t<F, T, TRUE_ARGS(Args)>> &res, F&& f, std::integer_sequence<T, ints...>&&, Args&&... args) {
-    (inner2(res, std::forward<F>(f), std::integral_constant<T, ints>(), std::forward<Args>(args)...), ...);
+template<class F, class T, class... Args, T... ints, class U> requires std::is_same_v<std::invoke_result_t<F, T, TRUE_ARGS(Args)>, U>
+constexpr void inner2(std::vector<U> &res, F&& f, std::integer_sequence<T, ints...>&&, Args&&... args) {
+    (inner2(std::forward<decltype(res)>(res), std::forward<F>(f), std::integral_constant<T, ints>(), std::forward<Args>(args)...), ...);
 }
 
-template<class F, class... Args>
+template<class F, class... Args> requires has_not_intseq<Args...>
 constexpr decltype(auto) invoke_intseq(F&& f, Args&&... args) {
     return std::invoke(std::forward<F>(f), std::forward<Args>(args)...);
 }
 
-template<class F, class... Args> requires has_intseq<Args...> && std::same_as<std::invoke_result_t<F, TRUE_ARGS(Args)>, void>
-// FIXME - same_as should, I believe, include Args as parameters, but trivially
-// adding them will not solve the problem - we need to unwrap intseqs first
-constexpr void invoke_intseq(F&& f, Args&&... args) {
-    inner(std::forward<F>(f), std::forward<Args>(args)...);
+template<class F2, class... Args2> requires has_intseq<Args2...> && std::same_as<std::invoke_result_t<F2, TRUE_ARGS(Args2)>, void>
+constexpr void invoke_intseq(F2&& f2, Args2&&... args2) {
+    inner(std::forward<F2>(f2), std::forward<Args2>(args2)...);
 }
 
-template<class F, class... Args> requires has_intseq<Args...>
-constexpr std::vector<std::invoke_result_t<F, TRUE_ARGS(Args)>> invoke_intseq(F&& f, Args&&... args) { // FIXME
-    std::vector<std::invoke_result_t<F, TRUE_ARGS(Args)>> ans; // FIXME - should include Args (insert same comment as above)
-    inner2(std::forward<decltype(ans)>(ans), std::forward<f>, std::forward<Args>(args)...);
+template<class F3, class... Args3> requires has_intseq<Args3...>
+constexpr std::vector<std::invoke_result_t<F3, TRUE_ARGS(Args3)>> invoke_intseq(F3&& f3, Args3&&... args3) { // FIXME
+    std::vector<std::invoke_result_t<F3, TRUE_ARGS(Args3)>> ans(args_size(args3...));
+    inner2(std::forward<decltype(ans)>(ans), std::forward<F3>(f3), std::forward<Args3>(args3)...);
     return ans;
 }
 
