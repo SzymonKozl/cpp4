@@ -55,7 +55,9 @@ constexpr void inner (F&& f, T&& arg1, Args&&... args){
         std::invoke(std::forward<F>(f), std::forward<T>(arg1));
     }
     else {
-        auto newf = std::bind_front(f, std::forward<T>(arg1));
+        decltype(auto) newf = [&f, &arg1]<class... U>(U&&... u) {
+            std::invoke(std::forward<F>(f), std::forward<T>(arg1), std::forward<U>(u)...);
+        };
         inner(std::forward<decltype(newf)>(newf), std::forward<Args>(args)...);
     }
 }
@@ -86,15 +88,13 @@ constexpr decltype(auto) invoke_intseq(F&& f, Args&&... args) {
 }
 
 template<class F, class... Args> requires has_intseq<Args...> && std::same_as<std::invoke_result_t<F, TRUE_ARGS(Args)>, void>
-// FIXME - same_as should, I believe, include Args as parameters, but trivially
-// adding them will not solve the problem - we need to unwrap intseqs first
 constexpr void invoke_intseq(F&& f, Args&&... args) {
     inner(std::forward<F>(f), std::forward<Args>(args)...);
 }
 
 template<class F, class... Args> requires has_intseq<Args...>
-constexpr std::vector<std::invoke_result_t<F, TRUE_ARGS(Args)>> invoke_intseq(F&& f, Args&&... args) { // FIXME
-    std::vector<std::invoke_result_t<F, TRUE_ARGS(Args)>> ans; // FIXME - should include Args (insert same comment as above)
+constexpr std::vector<std::invoke_result_t<F, TRUE_ARGS(Args)>> invoke_intseq(F&& f, Args&&... args) {
+    std::vector<std::invoke_result_t<F, TRUE_ARGS(Args)>> ans;
     inner2(std::forward<decltype(ans)>(ans), std::forward<f>, std::forward<Args>(args)...);
     return ans;
 }
