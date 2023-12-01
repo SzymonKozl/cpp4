@@ -9,6 +9,10 @@ concept is_intseq = requires (T a) {
     ([]<class U, U...args>(std::integer_sequence<U, args...>){})(a);
 };
 
+// na razie niepotrzebne, może kiedyś się przyda (ale wątpię tbh - wydaje mi się że is_intseq robi już decay implicite)
+template<class T>
+concept decays_to_intseq = is_intseq<std::decay_t<T>>;
+
 template<class... Ts>
 concept has_intseq = (false || ... || is_intseq<Ts>);
 
@@ -40,12 +44,12 @@ struct extract_size<std::integer_sequence<U, Ints...>>
 
 template<class T, class... Args>
 struct args_size_nz {
-    using val = std::integral_constant<size_t, extract_size<T>::val::value * args_size_nz<Args...>::val::value>;
+    using val = std::integral_constant<size_t, extract_size<std::decay_t<T>>::val::value * args_size_nz<Args...>::val::value>;
 };
 
 template <class T>
 struct args_size_nz<T> {
-    using val = typename extract_size<T>::val;
+    using val = typename extract_size<std::decay_t<T>>::val;
 };
 
 template <class... Args>
@@ -84,11 +88,11 @@ constexpr void inner(F&& f, std::integer_sequence<T, ints...>&&, Args&&... args)
 // TODO - inner 2 nie jest do końca dopracowany, bo ma większy problem - w ogóle nie działa
 template<class F, class T, class... Args, class U, size_t x>
 constexpr void inner2(size_t index, std::array<U, x> &res, F&& f, T&& arg1, Args&&... args) {
-    if constexpr (sizeof...(args) == 0){
-        res[index] = std::invoke(f, arg1);
+    if constexpr (sizeof...(Args) == 0){
+        res.at(index) = std::invoke(f, arg1);
     }
     else {
-        inner2(index, res, std::bind_front(f, arg1), args...);
+        inner2(index, res, std::bind_front(f, std::forward<T>(arg1)), std::forward<Args>(args)...);
     }
 }
 
@@ -98,7 +102,7 @@ constexpr void helper_tmp(size_t index, std::array<Y, x> &res, F&& f, std::integ
     (inner2(index + Ints2 * step, res, std::forward<F>(f), std::integral_constant<T, Ints>(), std::forward<Args>(args)...), ...);
 }
 
-template<class F, class T, class... Args, T... ints, class U, size_t x> requires std::is_same_v<std::invoke_result_t<F, T, TRUE_ARGS(Args)>, U>
+template<class F, class T, class... Args, T... ints, class U, size_t x>
 constexpr void inner2(size_t index, std::array<U, x> &res, F&& f, std::integer_sequence<T, ints...>&& iseq, Args&&... args) {
     constexpr size_t range = std::integer_sequence<T, ints...>::size();
     auto iseq2 = std::make_index_sequence<range>();

@@ -1,5 +1,7 @@
 #include <utility>
 #include<string>
+#include <iostream>
+#include <typeinfo>
 
 #include "invoke_intseq.h"
 
@@ -38,7 +40,6 @@ int main() {
     static_assert(!is_intseq<std::integral_constant<int, 1>>);
     static_assert(!is_intseq<std::true_type>);
     static_assert(!is_intseq<typename std::true_type::type>);
-
 
     // has_intseq
     using T1 = std::integer_sequence<int, 1, 2, 3>;
@@ -103,7 +104,7 @@ int main() {
     using cmp5 = pack_comparator<std::integral_constant<int, 0>, std::integral_constant<int, 0>>;
     using cmp6 = pack_comparator<std::integral_constant<int, 0>, std::integral_constant<int, 0>, std::integral_constant<long, 0>>;
     using cmp7 = pack_comparator<int, std::integral_constant<int, 0>, std::integral_constant<int, 0>>;
-    using cmp8 = pack_comparator<long>;
+    using cmp8 = pack_comparator<std::integral_constant<long, 0>>;
     using iseq1 = std::integer_sequence<int, 1, 2, 3>;
     using iseq2 = std::integer_sequence<int, 4, 5, 6>;
     using iseq3 = std::integer_sequence<int>;
@@ -172,4 +173,5 @@ int main() {
     static_assert(args_size<iseq3>::val::value == 0);
     static_assert(args_size<iseq1>::val::value == 3);
     static_assert(args_size<iseq2>::val::value == 3);
+    static_assert(args_size<iseq1&>::val::value == 3);
 }
