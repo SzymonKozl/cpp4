@@ -101,12 +101,15 @@ int main() {
     using cmp4 = pack_comparator<std::integral_constant<int, 0>>;
     using cmp5 = pack_comparator<std::integral_constant<int, 0>, std::integral_constant<int, 0>>;
     using cmp6 = pack_comparator<std::integral_constant<int, 0>, std::integral_constant<int, 0>, std::integral_constant<long, 0>>;
+    using cmp7 = pack_comparator<int, std::integral_constant<int, 0>, std::integral_constant<int, 0>>;
     using iseq1 = std::integer_sequence<int, 1, 2, 3>;
     using iseq2 = std::integer_sequence<int, 4, 5, 6>;
     using iseq3 = std::integer_sequence<int>;
     using iseq4 = std::integer_sequence<long, 1L>;
+    using iseq5 = std::integer_sequence<int, 1, 2>;
 
 
+    // TRUE_ARGS
     static_assert(
         std::is_same_v<
             typename cmp1::test_TRUE_ARGS<int, bool>::val,
@@ -136,6 +139,12 @@ int main() {
         >
     );
 
+    // much simpler 
+    // TODO: rewrite previous tests to match this syntax
+    static_assert(
+        cmp7::test_TRUE_ARGS<int, iseq5, iseq5>::val::value
+    );
+
     static_assert(
         std::is_same_v<
             typename cmp6::test_TRUE_ARGS<iseq2, iseq3, iseq4>::val,
@@ -151,21 +160,15 @@ int main() {
     static_assert(extract_size<std::integer_sequence<int, 1, 2, 3>>::val::value == 3);
     static_assert(extract_size<std::integer_sequence<bool, true>>::val::value == 1);
     static_assert(extract_size<std::integer_sequence<int>>::val::value == 0);
-
-    // args_size_nozero
-    static_assert(_args_size_nozero(1, iseq1(), iseq4()) == 3);
-    static_assert(_args_size_nozero(iseq1(), iseq1(), iseq1()) == 27);
-    static_assert(_args_size_nozero(1, 2, 3, "xd") == 1);
-    static_assert(_args_size_nozero(iseq1(), iseq2(), iseq3(), 2) == 0);
-    static_assert(_args_size_nozero(iseq1()) == 3);
-    static_assert(_args_size_nozero(iseq2()) == 3);
     
     //args_size
-    static_assert(args_size() == 1);
-    static_assert(args_size(1, iseq1(), iseq4()) == 3);
-    static_assert(args_size(iseq1(), iseq1(), iseq1()) == 27);
-    static_assert(args_size(1, 2, 3, "xd") == 1);
-    static_assert(args_size(iseq1(), iseq2(), iseq3(), 2) == 0);
-    static_assert(args_size(iseq1()) == 3);
-    static_assert(args_size(iseq2()) == 3);
+    static_assert(args_size<>::val::value == 1);
+    static_assert(args_size<int>::val::value == 1);
+    static_assert(args_size<int, iseq1, iseq4>::val::value == 3);
+    static_assert(args_size<iseq1, iseq1, iseq1>::val::value == 27);
+    static_assert(args_size<int, int, int, std::string>::val::value == 1);
+    static_assert(args_size<iseq1, iseq2, iseq3>::val::value == 0);
+    static_assert(args_size<iseq3>::val::value == 0);
+    static_assert(args_size<iseq1>::val::value == 3);
+    static_assert(args_size<iseq2>::val::value == 3);
 }
