@@ -95,6 +95,7 @@ int main() {
     static_assert(std::is_same_v<std::integral_constant<int, 0>, typename extract_type<std::integer_sequence<int, 1, 2, 3>>::type>);
     static_assert(std::is_same_v<std::integral_constant<int, 0>, typename extract_type<std::integer_sequence<int>>::type>);
     static_assert(std::is_same_v<std::integral_constant<long, 0>, typename extract_type<std::integer_sequence<long, 1L, 2L, 3L>>::type>);
+    static_assert(std::is_same_v<std::integral_constant<long, 0>, typename extract_type<std::integer_sequence<long, 1>>::type>);
 
 
     using cmp3 = pack_comparator<int, std::integral_constant<int, 0>, int>;
@@ -102,6 +103,7 @@ int main() {
     using cmp5 = pack_comparator<std::integral_constant<int, 0>, std::integral_constant<int, 0>>;
     using cmp6 = pack_comparator<std::integral_constant<int, 0>, std::integral_constant<int, 0>, std::integral_constant<long, 0>>;
     using cmp7 = pack_comparator<int, std::integral_constant<int, 0>, std::integral_constant<int, 0>>;
+    using cmp8 = pack_comparator<long>;
     using iseq1 = std::integer_sequence<int, 1, 2, 3>;
     using iseq2 = std::integer_sequence<int, 4, 5, 6>;
     using iseq3 = std::integer_sequence<int>;
@@ -139,11 +141,10 @@ int main() {
         >
     );
 
-    // much simpler 
+    // much simpler, more informative error msgs
     // TODO: rewrite previous tests to match this syntax
-    static_assert(
-        cmp7::test_TRUE_ARGS<int, iseq5, iseq5>::val::value
-    );
+    static_assert(cmp7::test_TRUE_ARGS<int, iseq5, iseq5>::val::value);
+    static_assert(cmp8::test_TRUE_ARGS<iseq4>::val::value);
 
     static_assert(
         std::is_same_v<
