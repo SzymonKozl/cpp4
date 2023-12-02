@@ -86,27 +86,26 @@ constexpr void inner(F&& f, std::integer_sequence<T, ints...>&&, Args&&... args)
 }
 
 // TODO - inner 2 nie jest do końca dopracowany, bo ma większy problem - w ogóle nie działa
-template<class F, class T, class... Args, class U, size_t x>
-constexpr void inner2(size_t index, std::array<U, x> &res, F&& f, T&& arg1, Args&&... args) {
+template<class F, class T, class... Args, class U>
+constexpr void inner2(std::vector<U> &res, F&& f, T&& arg1, Args&&... args) {
     if constexpr (sizeof...(Args) == 0){
-        res.at(index) = std::invoke(f, arg1);
+        res.push_back(std::invoke(f, arg1));
     }
     else {
-        inner2(index, res, std::bind_front(f, std::forward<T>(arg1)), std::forward<Args>(args)...);
+        inner2(res, std::bind_front(f, std::forward<T>(arg1)), std::forward<Args>(args)...);
     }
 }
 
-template<class F, class... Args, class T, class U, T... Ints, U... Ints2, class Y, size_t x>
-constexpr void helper_tmp(size_t index, std::array<Y, x> &res, F&& f, std::integer_sequence<T, Ints...>&&, std::integer_sequence<U, Ints2...>, Args&&... args) {
-    constexpr size_t step = args_size<Args...>::val::value;
-    (inner2(index + Ints2 * step, res, std::forward<F>(f), std::integral_constant<T, Ints>(), std::forward<Args>(args)...), ...);
+template<class F, class... Args, class T, class U, T... Ints, U... Ints2, class Y>
+constexpr void helper_tmp(std::vector<Y> &res, F&& f, std::integer_sequence<T, Ints...>&&, std::integer_sequence<U, Ints2...>, Args&&... args) {
+    (inner2(res, std::forward<F>(f), std::integral_constant<T, Ints>(), std::forward<Args>(args)...), ...);
 }
 
-template<class F, class T, class... Args, T... ints, class U, size_t x>
-constexpr void inner2(size_t index, std::array<U, x> &res, F&& f, std::integer_sequence<T, ints...>&& iseq, Args&&... args) {
+template<class F, class T, class... Args, T... ints, class U>
+constexpr void inner2(std::vector<U> &res, F&& f, std::integer_sequence<T, ints...>&& iseq, Args&&... args) {
     constexpr size_t range = std::integer_sequence<T, ints...>::size();
     auto iseq2 = std::make_index_sequence<range>();
-    helper_tmp(index, res, std::forward<F>(f), std::forward<decltype(iseq)>(iseq), iseq2, std::forward<Args>(args)...);
+    helper_tmp(res, std::forward<F>(f), std::forward<decltype(iseq)>(iseq), iseq2, std::forward<Args>(args)...);
 }
 
 template<class F, class... Args> requires has_not_intseq<Args...>
@@ -121,10 +120,9 @@ constexpr void invoke_intseq(F&& f, Args&&... args) {
 
 template<class F, class... Args> requires has_intseq<Args...>
 constexpr decltype(auto) invoke_intseq(F&& f, Args&&... args) {
-    constexpr size_t res_size = args_size<Args...>::val::value;
-    std::array<std::invoke_result_t<F, TRUE_ARGS(Args)>, res_size> ans;
-    size_t index = 0;
-    inner2(index, ans, std::forward<F>(f), std::forward<Args>(args)...);
+    constexpr size_t return_size = args_size<Args...>::val::value;
+    constexpr const std::vector<std::invoke_result_t<F, TRUE_ARGS(Args)>> ans(return_size);
+    inner2(ans, std::forward<F>(f), std::forward<Args>(args)...);
     return ans;
 }
 
@@ -137,12 +135,9 @@ constexpr auto initializeArray(const T& ref, std::index_sequence<Is...>) {
 
 template<class F, class... Args> requires has_intseq<Args...> && std::is_reference<std::invoke_result_t<F, TRUE_ARGS(Args)>>::value
 constexpr decltype(auto) invoke_intseq(F&& f, Args&&... args) {
-    constexpr size_t res_size = args_size<Args...>::val::value;
     using res_t = std::decay_t<std::invoke_result_t<F, TRUE_ARGS(Args)>>;
-    res_t dummy{};
-    std::reference_wrapper<res_t>dummy_ref(dummy);
-    auto res = initializeArray(dummy_ref, std::make_index_sequence<res_size>{});
-    inner2(0, res, std::forward<F>(f), std::forward<Args>(args)...);
+    constexpr std::vector<std::reference_wrapper<res_t>> res{};
+    inner2(res, std::forward<F>(f), std::forward<Args>(args)...);
     return res;
 }
 #endif
