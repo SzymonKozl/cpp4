@@ -37,7 +37,7 @@ Dodatkowe wymagania
   Kopia może zostać wykonana tylko wtedy, gdy argument jest przekazywany przez
   wartość.
 * Wymagamy „constexpr”: funkcja invoke_intseq powinna być wyliczalna w czasie
-  kompilowania, jeśli wszystkie argumenty (f i args...) są wyliczalne podczas
+  kompilowania, jeśli wsystkie argumenty (f i args...) są wyliczalne podczas
   kompilowania.
 
 Wymagania formalne

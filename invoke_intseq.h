@@ -128,4 +128,21 @@ constexpr decltype(auto) invoke_intseq(F&& f, Args&&... args) {
     return ans;
 }
 
+
+template <std::size_t... Is, typename T>
+constexpr auto initializeArray(const T& ref, std::index_sequence<Is...>) {
+    return std::array<T, sizeof...(Is)>{((void)Is, std::ref(ref))...};
+}
+
+
+template<class F, class... Args> requires has_intseq<Args...> && std::is_reference<std::invoke_result_t<F, TRUE_ARGS(Args)>>::value
+constexpr decltype(auto) invoke_intseq(F&& f, Args&&... args) {
+    constexpr size_t res_size = args_size<Args...>::val::value;
+    using res_t = std::decay_t<std::invoke_result_t<F, TRUE_ARGS(Args)>>;
+    res_t dummy{};
+    std::reference_wrapper<res_t>dummy_ref(dummy);
+    auto res = initializeArray(dummy_ref, std::make_index_sequence<res_size>{});
+    inner2(0, res, std::forward<F>(f), std::forward<Args>(args)...);
+    return res;
+}
 #endif

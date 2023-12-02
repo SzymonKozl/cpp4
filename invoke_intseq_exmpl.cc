@@ -136,11 +136,11 @@ int main()
     std::cout << "integer sequence multiple result" << std::endl;
     for (auto i : invoke_intseq(make_number, 1, std::integer_sequence<int, 2, 3>(), std::integer_sequence<int, 4, 5>()))
         std::cout << i << std::endl;
-    // static_assert(std::ranges::equal(invoke_intseq(make_number, 1, std::integer_sequence<int, 2, 3>(), std::integer_sequence<int, 4, 5>()), std::array{124, 125, 134, 135}));
+    static_assert(std::ranges::equal(invoke_intseq(make_number, 1, std::integer_sequence<int, 2, 3>(), std::integer_sequence<int, 4, 5>()), std::array{124, 125, 134, 135}));
 
-    // std::cout << "tuple result" << std::endl;
-    // for (const auto& t : invoke_intseq([](auto a, auto b, int c, auto d) {return std::make_tuple(a, b, c, d);}, "ala", "ma", std::integer_sequence<int, 5, 7, 9>(), "kotów"))
-    //     std::apply([](auto... a) {Print(a...);}, t);
+    std::cout << "tuple result" << std::endl;
+    for (const auto& t : invoke_intseq([](auto a, auto b, int c, auto d) {return std::make_tuple(a, b, c, d);}, "ala", "ma", std::integer_sequence<int, 5, 7, 9>(), "kotów"))
+        std::apply([](auto... a) {Print(a...);}, t);
 
     std::cout << "Foo: const auto&" << std::endl;
     invoke_intseq([](const auto&... a) {Print(a...);}, Foo(), foo);
@@ -161,11 +161,11 @@ int main()
 
     std::cout << "reference passing with integer_sequence" << std::endl;
     s = 0;
-    // auto ref_seq = invoke_intseq([](size_t a, size_t& r) -> size_t& {r += a; return r;}, std::make_index_sequence<5>(), s);
-    // std::cout << s << std::endl;
-    // for (size_t& r : ref_seq)
-    //     r++;
-    // std::cout << s << std::endl;
+    auto ref_seq = invoke_intseq([](size_t a, size_t& r) -> size_t& {r += a; return r;}, std::make_index_sequence<5>(), s);
+    std::cout << s << std::endl;
+    for (size_t& r : ref_seq)
+        r++;
+    std::cout << s << std::endl;
 
     std::cout << "reference result single" << std::endl;
     invoke_intseq([](size_t a, size_t& r) -> size_t& {r += a; return r;}, 200, s) += 3000;

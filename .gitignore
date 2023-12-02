@@ -11,6 +11,13 @@ CTestTestfile.cmake
 _deps
 
 a.out
+*.out
 
 .vscode/*
 .vscode
+
+# SzymonKozl - syf
+niedziaua.cc
+zlosliwy.cc
+jebane_bydle.cc
+y.cc
